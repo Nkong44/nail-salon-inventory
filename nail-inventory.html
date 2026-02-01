@@ -1,0 +1,1024 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Nail Salon Inventory</title>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+
+        :root {
+            --primary: #e91e63;
+            --primary-light: #f8bbd9;
+            --primary-dark: #c2185b;
+            --secondary: #fce4ec;
+            --gold: #d4af37;
+            --text: #2c3e50;
+            --text-light: #7f8c8d;
+            --white: #ffffff;
+            --shadow: 0 4px 20px rgba(0,0,0,0.08);
+            --shadow-strong: 0 8px 30px rgba(233, 30, 99, 0.2);
+        }
+
+        body {
+            background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+            padding-bottom: 100px;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: var(--white);
+            padding: 40px 20px 30px;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--shadow-strong);
+            border-bottom-left-radius: 30px;
+            border-bottom-right-radius: 30px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+            font-weight: 300;
+        }
+
+        /* Navigation */
+        .nav-container {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--white);
+            padding: 12px;
+            border-radius: 30px;
+            box-shadow: var(--shadow-strong);
+            display: flex;
+            gap: 10px;
+            z-index: 1000;
+            width: 90%;
+            max-width: 400px;
+            justify-content: space-around;
+        }
+
+        .nav-btn {
+            border: none;
+            background: transparent;
+            color: var(--text-light);
+            padding: 12px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            flex: 1;
+        }
+
+        .nav-btn.active {
+            background: var(--secondary);
+            color: var(--primary);
+        }
+
+        .nav-btn svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        /* Main Content */
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .section {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Cards */
+        .card {
+            background: var(--white);
+            border-radius: 24px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(0,0,0,0.04);
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Dashboard Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-box {
+            background: linear-gradient(135deg, var(--secondary) 0%, var(--white) 100%);
+            padding: 20px;
+            border-radius: 20px;
+            text-align: center;
+            border: 2px solid var(--primary-light);
+        }
+
+        .stat-number {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--primary);
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 4px;
+        }
+
+        /* Buttons */
+        .btn {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: var(--white);
+            border: none;
+            padding: 16px 32px;
+            border-radius: 16px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 12px;
+            box-shadow: 0 4px 15px rgba(233, 30, 99, 0.3);
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-secondary {
+            background: var(--white);
+            color: var(--primary);
+            border: 2px solid var(--primary);
+            box-shadow: none;
+        }
+
+        .btn-gold {
+            background: linear-gradient(135deg, var(--gold) 0%, #b8941f 100%);
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+        }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--text);
+            font-size: 14px;
+        }
+
+        .form-input, .form-select {
+            width: 100%;
+            padding: 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 16px;
+            font-size: 16px;
+            transition: all 0.3s;
+            background: var(--white);
+        }
+
+        .form-input:focus, .form-select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px var(--primary-light);
+        }
+
+        /* Inventory List */
+        .inventory-item {
+            background: var(--white);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 12px;
+            box-shadow: var(--shadow);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 5px solid var(--primary);
+            transition: transform 0.2s;
+        }
+
+        .inventory-item:hover {
+            transform: translateX(5px);
+        }
+
+        .inventory-item.low-stock {
+            border-left-color: #e74c3c;
+            background: linear-gradient(to right, #fff5f5 0%, var(--white) 100%);
+        }
+
+        .item-info h3 {
+            font-size: 18px;
+            margin-bottom: 4px;
+            color: var(--text);
+        }
+
+        .item-meta {
+            font-size: 13px;
+            color: var(--text-light);
+        }
+
+        .item-quantity {
+            text-align: right;
+        }
+
+        .qty-number {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .qty-label {
+            font-size: 12px;
+            color: var(--text-light);
+        }
+
+        .low-stock .qty-number {
+            color: #e74c3c;
+        }
+
+        /* Usage Form */
+        .usage-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .quick-btn {
+            background: var(--secondary);
+            border: 2px solid transparent;
+            padding: 20px;
+            border-radius: 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .quick-btn.selected {
+            border-color: var(--primary);
+            background: var(--primary);
+            color: var(--white);
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--white);
+            border-radius: 24px;
+            padding: 30px;
+            width: 100%;
+            max-width: 400px;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal-header {
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            background: var(--text);
+            color: var(--white);
+            padding: 16px 32px;
+            border-radius: 50px;
+            font-weight: 600;
+            z-index: 3000;
+            opacity: 0;
+            transition: all 0.3s;
+            box-shadow: var(--shadow-strong);
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        .toast.success {
+            background: #27ae60;
+        }
+
+        .toast.error {
+            background: #e74c3c;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-light);
+        }
+
+        .empty-state svg {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+
+        /* Search Bar */
+        .search-bar {
+            position: sticky;
+            top: 0;
+            background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+            padding: 10px 0 20px;
+            z-index: 10;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            background: var(--gold);
+            color: var(--white);
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            margin-left: 8px;
+        }
+
+        .history-list {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 15px;
+        }
+
+        .history-item {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+        }
+
+        .history-date {
+            color: var(--text-light);
+            font-size: 12px;
+        }
+
+        @media (max-width: 380px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            .usage-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <div class="header">
+        <h1>💅 Nail Salon Pro</h1>
+        <p>Inventory Management System</p>
+    </div>
+
+    <div class="container">
+        <!-- Dashboard Section -->
+        <div id="dashboard" class="section active">
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <span class="stat-number" id="totalItems">0</span>
+                    <div class="stat-label">Products</div>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-number" id="lowStockCount">0</span>
+                    <div class="stat-label">Low Stock</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">⚡ Quick Actions</div>
+                <button class="btn" onclick="openModal('useModal')">
+                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z"/></svg>
+                    Record Usage
+                </button>
+                <button class="btn btn-secondary" onclick="openModal('addModal')" style="margin-top: 10px;">
+                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20"><path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6zM16 7a1 1 0 10-2 0v1h-1a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1V7z"/></svg>
+                    Add New Product
+                </button>
+            </div>
+
+            <div class="card" id="lowStockCard" style="display: none;">
+                <div class="card-title">🚨 Low Stock Alert</div>
+                <div id="lowStockList"></div>
+            </div>
+        </div>
+
+        <!-- Inventory Section -->
+        <div id="inventory" class="section">
+            <div class="search-bar">
+                <input type="text" class="form-input" id="searchInput" placeholder="🔍 Search products..." onkeyup="renderInventory()">
+            </div>
+            <div id="inventoryList"></div>
+        </div>
+
+        <!-- Reports Section -->
+        <div id="reports" class="section">
+            <div class="card">
+                <div class="card-title">📊 Export Data</div>
+                <p style="margin-bottom: 20px; color: var(--text-light); line-height: 1.6;">
+                    Download a complete Excel report including current stock levels and usage history with dates.
+                </p>
+                <button class="btn btn-gold" onclick="exportToExcel()">
+                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+                    Download Excel Report
+                </button>
+            </div>
+
+            <div class="card">
+                <div class="card-title">⚠️ Data Management</div>
+                <p style="margin-bottom: 20px; color: var(--text-light); font-size: 14px;">
+                    Backup your data or restore from a previous backup. Keep your inventory safe!
+                </p>
+                <button class="btn btn-secondary" onclick="backupData()">Backup to File</button>
+                <label class="btn btn-secondary" style="margin-top: 10px; display: block; text-align: center;">
+                    Restore from File
+                    <input type="file" id="restoreFile" style="display: none;" accept=".json" onchange="restoreData(this)">
+                </label>
+                <button class="btn btn-danger" onclick="clearAllData()" style="margin-top: 10px;">Clear All Data</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <div class="nav-container">
+        <button class="nav-btn active" onclick="showSection('dashboard')">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+            Home
+        </button>
+        <button class="nav-btn" onclick="showSection('inventory')">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+            Stock
+        </button>
+        <button class="nav-btn" onclick="showSection('reports')">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            Reports
+        </button>
+    </div>
+
+    <!-- Add Item Modal -->
+    <div id="addModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Add New Product</div>
+            </div>
+            <form onsubmit="saveNewItem(event)">
+                <div class="form-group">
+                    <label class="form-label">Product Name</label>
+                    <input type="text" class="form-input" id="newItemName" required placeholder="e.g., Pink Acrylic Powder">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Category</label>
+                    <select class="form-select" id="newItemCategory">
+                        <option value="Polish">Nail Polish</option>
+                        <option value="Acrylic">Acrylic & Powder</option>
+                        <option value="Gel">Gel & Shellac</option>
+                        <option value="Tools">Tools & Brushes</option>
+                        <option value="Supplies">Disposables & Supplies</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Initial Quantity</label>
+                    <input type="number" class="form-input" id="newItemQty" required min="0" placeholder="0">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Unit (pieces, bottles, packs, etc.)</label>
+                    <input type="text" class="form-input" id="newItemUnit" required placeholder="e.g., bottles">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Low Stock Alert Level</label>
+                    <input type="number" class="form-input" id="newItemMin" required min="0" placeholder="5">
+                    <small style="color: var(--text-light); font-size: 12px;">Get warned when stock falls below this number</small>
+                </div>
+                <button type="submit" class="btn">Add Product</button>
+                <button type="button" class="btn btn-secondary" onclick="closeModal('addModal')" style="margin-top: 8px;">Cancel</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Use Item Modal -->
+    <div id="useModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Record Usage</div>
+            </div>
+            <form onsubmit="recordUsage(event)">
+                <div class="form-group">
+                    <label class="form-label">Select Product</label>
+                    <select class="form-select" id="useItemSelect" required style="font-size: 16px;">
+                        <option value="">Choose a product...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Amount Used</label>
+                    <input type="number" class="form-input" id="useItemQty" required min="1" placeholder="1">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Note (Optional)</label>
+                    <input type="text" class="form-input" id="useItemNote" placeholder="e.g., Used for bridal client">
+                </div>
+                <button type="submit" class="btn">Record Usage</button>
+                <button type="button" class="btn btn-secondary" onclick="closeModal('useModal')" style="margin-top: 8px;">Cancel</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Item Details Modal -->
+    <div id="detailsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title" id="detailName">Product Details</div>
+            </div>
+            <div id="detailContent"></div>
+            <button class="btn btn-secondary" onclick="closeModal('detailsModal')" style="margin-top: 20px;">Close</button>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="toast"></div>
+
+    <script>
+        // Data Management
+        let inventory = [];
+        let history = [];
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadData();
+            updateDashboard();
+            renderInventory();
+            populateUseSelect();
+            
+            // Auto refresh every minute to keep stats current
+            setInterval(updateDashboard, 60000);
+        });
+
+        function loadData() {
+            const savedInv = localStorage.getItem('nailSalonInventory');
+            const savedHist = localStorage.getItem('nailSalonHistory');
+            
+            if (savedInv) {
+                inventory = JSON.parse(savedInv);
+            } else {
+                // Demo data for first-time users
+                inventory = [
+                    {id: 1, name: 'Pink Acrylic Powder', category: 'Acrylic', qty: 15, unit: 'jars', min: 5, created: new Date().toISOString()},
+                    {id: 2, name: 'UV Top Coat', category: 'Gel', qty: 8, unit: 'bottles', min: 3, created: new Date().toISOString()},
+                    {id: 3, name: 'Nail Files (100/180)', category: 'Supplies', qty: 50, unit: 'pieces', min: 20, created: new Date().toISOString()}
+                ];
+                saveData();
+            }
+            
+            if (savedHist) {
+                history = JSON.parse(savedHist);
+            }
+        }
+
+        function saveData() {
+            localStorage.setItem('nailSalonInventory', JSON.stringify(inventory));
+            localStorage.setItem('nailSalonHistory', JSON.stringify(history));
+        }
+
+        // Navigation
+        function showSection(sectionId) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            
+            document.getElementById(sectionId).classList.add('active');
+            event.target.closest('.nav-btn').classList.add('active');
+            
+            if (sectionId === 'inventory') renderInventory();
+            if (sectionId === 'dashboard') updateDashboard();
+        }
+
+        // Modal Functions
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+            if (modalId === 'useModal') populateUseSelect();
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        // Add New Item
+        function saveNewItem(e) {
+            e.preventDefault();
+            
+            const newItem = {
+                id: Date.now(),
+                name: document.getElementById('newItemName').value,
+                category: document.getElementById('newItemCategory').value,
+                qty: parseInt(document.getElementById('newItemQty').value),
+                unit: document.getElementById('newItemUnit').value,
+                min: parseInt(document.getElementById('newItemMin').value),
+                created: new Date().toISOString()
+            };
+            
+            inventory.push(newItem);
+            saveData();
+            
+            // Log as "Stock Added" in history
+            logHistory(newItem.id, newItem.qty, 'Initial stock added');
+            
+            showToast('Product added successfully!', 'success');
+            closeModal('addModal');
+            updateDashboard();
+            
+            // Reset form
+            e.target.reset();
+        }
+
+        // Record Usage
+        function recordUsage(e) {
+            e.preventDefault();
+            
+            const itemId = parseInt(document.getElementById('useItemSelect').value);
+            const amount = parseInt(document.getElementById('useItemQty').value);
+            const note = document.getElementById('useItemNote').value || 'Daily usage';
+            
+            const item = inventory.find(i => i.id === itemId);
+            
+            if (!item) {
+                showToast('Product not found', 'error');
+                return;
+            }
+            
+            if (amount > item.qty) {
+                showToast(`Not enough stock! Only ${item.qty} available.`, 'error');
+                return;
+            }
+            
+            item.qty -= amount;
+            saveData();
+            logHistory(itemId, -amount, note);
+            
+            showToast(`Recorded usage of ${amount} ${item.unit}`, 'success');
+            closeModal('useModal');
+            updateDashboard();
+            e.target.reset();
+        }
+
+        function logHistory(itemId, qty, note) {
+            const item = inventory.find(i => i.id === itemId);
+            history.push({
+                id: Date.now(),
+                itemId: itemId,
+                itemName: item ? item.name : 'Unknown',
+                qty: qty,
+                note: note,
+                date: new Date().toISOString()
+            });
+            saveData();
+        }
+
+        // Render Functions
+        function renderInventory() {
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const container = document.getElementById('inventoryList');
+            
+            const filtered = inventory.filter(item => 
+                item.name.toLowerCase().includes(search) || 
+                item.category.toLowerCase().includes(search)
+            );
+            
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd"/></svg>
+                        <p>No products found. Add your first product!</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = filtered.map(item => `
+                <div class="inventory-item ${item.qty <= item.min ? 'low-stock' : ''}" onclick="showDetails(${item.id})">
+                    <div class="item-info">
+                        <h3>${item.name}</h3>
+                        <div class="item-meta">${item.category} • Added ${new Date(item.created).toLocaleDateString()}</div>
+                        ${item.qty <= item.min ? '<span class="badge">LOW STOCK</span>' : ''}
+                    </div>
+                    <div class="item-quantity">
+                        <div class="qty-number">${item.qty}</div>
+                        <div class="qty-label">${item.unit}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateDashboard() {
+            document.getElementById('totalItems').textContent = inventory.length;
+            
+            const lowStock = inventory.filter(i => i.qty <= i.min);
+            document.getElementById('lowStockCount').textContent = lowStock.length;
+            
+            const lowStockCard = document.getElementById('lowStockCard');
+            const lowStockList = document.getElementById('lowStockList');
+            
+            if (lowStock.length > 0) {
+                lowStockCard.style.display = 'block';
+                lowStockList.innerHTML = lowStock.map(item => `
+                    <div style="padding: 10px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between;">
+                        <span>${item.name}</span>
+                        <strong style="color: #e74c3c;">${item.qty} left</strong>
+                    </div>
+                `).join('');
+            } else {
+                lowStockCard.style.display = 'none';
+            }
+        }
+
+        function populateUseSelect() {
+            const select = document.getElementById('useItemSelect');
+            select.innerHTML = '<option value="">Choose a product...</option>' +
+                inventory.map(item => `<option value="${item.id}">${item.name} (${item.qty} ${item.unit})</option>`).join('');
+        }
+
+        function showDetails(itemId) {
+            const item = inventory.find(i => i.id === itemId);
+            if (!item) return;
+            
+            const itemHistory = history.filter(h => h.itemId === itemId).slice(-10).reverse();
+            
+            document.getElementById('detailName').textContent = item.name;
+            document.getElementById('detailContent').innerHTML = `
+                <div style="margin-bottom: 20px;">
+                    <p><strong>Category:</strong> ${item.category}</p>
+                    <p><strong>Current Stock:</strong> <span style="color: ${item.qty <= item.min ? '#e74c3c' : 'inherit'}; font-size: 24px; font-weight: bold;">${item.qty}</span> ${item.unit}</p>
+                    <p><strong>Alert Level:</strong> ${item.min} ${item.unit}</p>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Add Stock</label>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="number" class="form-input" id="restockQty" placeholder="Amount" style="flex: 1;">
+                        <button class="btn" onclick="restock(${itemId})" style="width: auto; padding: 0 20px; margin: 0;">Add</button>
+                    </div>
+                </div>
+                
+                <h4 style="margin: 20px 0 10px; font-size: 16px;">Recent History</h4>
+                <div class="history-list">
+                    ${itemHistory.length === 0 ? '<p style="color: #999; font-size: 14px;">No usage recorded yet</p>' : 
+                        itemHistory.map(h => `
+                            <div class="history-item">
+                                <div>
+                                    <div style="${h.qty < 0 ? 'color: #e74c3c;' : 'color: #27ae60;'} font-weight: 600;">
+                                        ${h.qty > 0 ? '+' : ''}${h.qty} ${item.unit}
+                                    </div>
+                                    <div style="font-size: 12px; color: #666;">${h.note}</div>
+                                </div>
+                                <div class="history-date">${new Date(h.date).toLocaleDateString()}<br>${new Date(h.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
+                            </div>
+                        `).join('')}
+                </div>
+            `;
+            
+            openModal('detailsModal');
+        }
+
+        function restock(itemId) {
+            const amount = parseInt(document.getElementById('restockQty').value);
+            if (!amount || amount < 1) {
+                showToast('Please enter a valid amount', 'error');
+                return;
+            }
+            
+            const item = inventory.find(i => i.id === itemId);
+            item.qty += amount;
+            saveData();
+            logHistory(itemId, amount, 'Stock replenished');
+            
+            showToast(`Added ${amount} ${item.unit}`, 'success');
+            closeModal('detailsModal');
+            updateDashboard();
+            renderInventory();
+        }
+
+        // Excel Export
+        function exportToExcel() {
+            // Prepare current inventory sheet
+            const invData = inventory.map(item => ({
+                'Product Name': item.name,
+                'Category': item.category,
+                'Current Quantity': item.qty,
+                'Unit': item.unit,
+                'Minimum Alert Level': item.min,
+                'Status': item.qty <= item.min ? 'LOW STOCK' : 'OK',
+                'Date Added': new Date(item.created).toLocaleDateString()
+            }));
+
+            // Prepare usage history sheet
+            const histData = history.map(h => ({
+                'Date': new Date(h.date).toLocaleDateString(),
+                'Time': new Date(h.date).toLocaleTimeString(),
+                'Product': h.itemName,
+                'Quantity Change': h.qty,
+                'Note': h.note
+            }));
+
+            // Create workbook
+            const wb = XLSX.utils.book_new();
+            
+            // Add inventory sheet
+            const invWs = XLSX.utils.json_to_sheet(invData);
+            XLSX.utils.book_append_sheet(wb, invWs, 'Current Inventory');
+            
+            // Add history sheet
+            const histWs = XLSX.utils.json_to_sheet(histData);
+            XLSX.utils.book_append_sheet(wb, histWs, 'Usage History');
+            
+            // Generate filename with date
+            const dateStr = new Date().toISOString().split('T')[0];
+            const filename = `NailSalon_Inventory_${dateStr}.xlsx`;
+            
+            // Download
+            XLSX.writeFile(wb, filename);
+            showToast('Excel file downloaded!', 'success');
+        }
+
+        // Backup & Restore
+        function backupData() {
+            const data = {
+                inventory: inventory,
+                history: history,
+                exportDate: new Date().toISOString()
+            };
+            
+            const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `NailSalon_Backup_${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            showToast('Backup file downloaded', 'success');
+        }
+
+        function restoreData(input) {
+            const file = input.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (data.inventory && Array.isArray(data.inventory)) {
+                        inventory = data.inventory;
+                        history = data.history || [];
+                        saveData();
+                        updateDashboard();
+                        renderInventory();
+                        showToast('Data restored successfully!', 'success');
+                    } else {
+                        throw new Error('Invalid file format');
+                    }
+                } catch (err) {
+                    showToast('Error restoring file: ' + err.message, 'error');
+                }
+            };
+            reader.readAsText(file);
+            input.value = ''; // Reset input
+        }
+
+        function clearAllData() {
+            if (confirm('WARNING: This will delete ALL inventory and history data. Are you sure?')) {
+                inventory = [];
+                history = [];
+                saveData();
+                updateDashboard();
+                renderInventory();
+                showToast('All data cleared', 'success');
+            }
+        }
+
+        // Utilities
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast ${type} show`;
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // Close modals on outside click
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.classList.remove('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
